@@ -22,7 +22,7 @@ use ratatui::{
 };
 
 use crate::{
-    game::{Directions, Event, Game, handle_input_events, update_snake_state},
+    game::{Directions, Event, Food, Game, handle_input_events, update_snake_state},
     snake::Snake,
 };
 
@@ -31,6 +31,7 @@ struct App {
     exit: bool,
     snake: Snake,
     game: Game,
+    food: Food,
 }
 
 impl App {
@@ -43,7 +44,7 @@ impl App {
             match rx.recv().unwrap() {
                 Event::Input(key_event) => self.handle_key_event(key_event)?,
                 Event::UpdateSnakeState => {
-                    self.move_snake();
+                    self.move_or_grow_snake();
                     self.check_game_over();
                 }
             }
@@ -75,8 +76,18 @@ impl App {
         self.exit = true
     }
 
-    fn move_snake(&mut self) {
-        Snake::move_snake(&mut self.snake);
+    fn move_or_grow_snake(&mut self) {
+        let snake_coords = self.snake.getter_head_coord();
+        let food_coords = self.food.get_coords();
+
+        if snake_coords.0.round() == food_coords.0.round()
+            && snake_coords.1.round() == food_coords.1.round()
+        {
+            self.snake.move_snake(true);
+            self.food = Food::new(self.game.get_bounds());
+        } else {
+            self.snake.move_snake(false);
+        }
     }
 
     fn change_snake_direction(&mut self, direc: Directions) {
@@ -84,7 +95,7 @@ impl App {
     }
 
     fn check_game_over(&self) {
-        if Game::out_of_bounds(&self.game, self.snake.getter_coord()) {
+        if Game::out_of_bounds(&self.game, self.snake.getter_head_coord()) {
             self.game.is_game_over();
         }
     }
@@ -95,8 +106,7 @@ impl Widget for &App {
     where
         Self: Sized,
     {
-        let snake_pos = Snake::getter_coord(&self.snake);
-
+        let snake_pos = Snake::getter_body(&self.snake);
         let block = Block::bordered()
             .padding(Padding::ZERO)
             .border_style(Style::default().bg(Color::White));
@@ -110,7 +120,11 @@ impl Widget for &App {
             .marker(Marker::HalfBlock)
             .paint(|ctx| {
                 ctx.draw(&Points {
-                    coords: &[snake_pos],
+                    coords: &snake_pos,
+                    color: Color::Red,
+                });
+                ctx.draw(&Points {
+                    coords: &[self.food.get_coords()],
                     color: Color::Red,
                 });
             })
@@ -134,10 +148,13 @@ fn main() -> io::Result<()> {
 
     let game = Game::new(width - 1.0, height - 2.0, Arc::clone(&game_over));
 
+    let food = Food::new(game.get_bounds());
+
     let mut app = App {
         exit: false,
         snake,
         game,
+        food,
     };
 
     let (event_tx, event_rx) = mpsc::channel::<Event>();

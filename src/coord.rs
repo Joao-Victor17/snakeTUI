@@ -4,7 +4,7 @@
 use crate::game::Directions;
 use std::ops::AddAssign;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Coord {
     x: f64,
     y: f64,
@@ -25,12 +25,24 @@ impl Coord {
     }
 
     // NOTE: Métodos para movimentar uma coordenada
-    pub fn advance(&mut self, direc: Directions, speed: f64) {
+    pub fn advance(&self, direc: Directions, speed: f64) -> Coord {
         match direc {
-            Directions::Up => self.y += speed / 2.0,
-            Directions::Right => self.x += speed,
-            Directions::Down => self.y -= speed / 2.0,
-            Directions::Left => self.x -= speed,
+            Directions::Up => Coord {
+                x: self.x,
+                y: self.y + speed / 2.0,
+            },
+            Directions::Right => Coord {
+                x: self.x + speed,
+                y: self.y,
+            },
+            Directions::Down => Coord {
+                x: self.x,
+                y: self.y - speed / 2.0,
+            },
+            Directions::Left => Coord {
+                x: self.x - speed,
+                y: self.y,
+            },
         }
     }
 

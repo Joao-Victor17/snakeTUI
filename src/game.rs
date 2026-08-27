@@ -1,9 +1,9 @@
+use rand::RngExt;
+use ratatui::layout::Rect;
 use std::{
     sync::{Arc, atomic::AtomicBool, mpsc},
     thread, time,
 };
-
-use ratatui::layout::Rect;
 
 use crate::coord::Coord;
 
@@ -16,13 +16,45 @@ pub enum Directions {
     Left,
 }
 
+impl Directions {
+    pub fn is_opposite(&self) -> Self {
+        match self {
+            Directions::Up => Directions::Down,
+            Directions::Down => Directions::Up,
+            Directions::Left => Directions::Right,
+            Directions::Right => Directions::Left,
+        }
+    }
+}
+
 pub enum Event {
     Input(crossterm::event::KeyEvent),
     UpdateSnakeState,
 }
 
+#[derive(Default, Debug, PartialEq)]
+pub struct Food {
+    coord: Coord,
+}
+impl Food {
+    pub fn new(game_limits: Bounds) -> Self {
+        let mut rng = rand::rng();
+
+        let x = rng.random_range(game_limits.x_min..game_limits.x_max);
+        let y = rng.random_range(game_limits.y_min..game_limits.y_max);
+
+        Food {
+            coord: Coord::new(x, y),
+        }
+    }
+
+    pub fn get_coords(&self) -> (f64, f64) {
+        self.coord.get_coords()
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default)]
-struct Bounds {
+pub struct Bounds {
     x_min: f64,
     y_min: f64,
     x_max: f64,
@@ -55,6 +87,15 @@ impl Game {
     pub fn is_game_over(&self) {
         self.game_over
             .store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    pub fn get_bounds(&self) -> Bounds {
+        Bounds {
+            x_min: self.border_limits.x_min,
+            x_max: self.border_limits.x_max,
+            y_min: self.border_limits.y_min,
+            y_max: self.border_limits.y_max,
+        }
     }
 
     pub fn out_of_bounds(&self, snake_coord: (f64, f64)) -> bool {
