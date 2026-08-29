@@ -6,48 +6,52 @@ use std::ops::AddAssign;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Coord {
-    x: f64,
-    y: f64,
+    x: i64,
+    y: i64,
 }
 
 // TODO: Ver o que exatamente faz essa trait
 impl AddAssign<i32> for Coord {
     fn add_assign(&mut self, rhs: i32) {
-        self.x += rhs as f64;
-        self.y += rhs as f64;
+        self.x += rhs as i64;
+        self.y += rhs as i64;
     }
 }
 
 impl Coord {
     // NOTE: Método construtor de uma coordenada
-    pub fn new(x: f64, y: f64) -> Self {
+    pub fn new(x: i64, y: i64) -> Self {
         Coord { x, y }
     }
 
     // NOTE: Métodos para movimentar uma coordenada
-    pub fn advance(&self, direc: Directions, speed: f64) -> Coord {
+    pub fn advance(&self, direc: Directions, speed_x: i64, speed_y: i64) -> Coord {
         match direc {
             Directions::Up => Coord {
                 x: self.x,
-                y: self.y + speed / 2.0,
+                y: self.y + speed_y,
             },
             Directions::Right => Coord {
-                x: self.x + speed,
+                x: self.x + speed_x,
                 y: self.y,
             },
             Directions::Down => Coord {
                 x: self.x,
-                y: self.y - speed / 2.0,
+                y: self.y - speed_y,
             },
             Directions::Left => Coord {
-                x: self.x - speed,
+                x: self.x - speed_x,
                 y: self.y,
             },
         }
     }
 
-    pub fn get_coords(&self) -> (f64, f64) {
+    pub fn get_coords(&self) -> (i64, i64) {
         let (x, y) = (self.x, self.y);
         (x, y)
+    }
+
+    pub fn get_coords_to_canvas(&self) -> (f64, f64) {
+        (self.x as f64, self.y as f64 / 2.0)
     }
 }

@@ -78,11 +78,9 @@ impl App {
 
     fn move_or_grow_snake(&mut self) {
         let snake_coords = self.snake.getter_head_coord();
-        let food_coords = self.food.get_coords();
+        let food_coords = self.food.get_coords_to_canvas();
 
-        if snake_coords.0.round() == food_coords.0.round()
-            && snake_coords.1.round() == food_coords.1.round()
-        {
+        if snake_coords.0 == food_coords.0 && snake_coords.1 == food_coords.1 {
             self.snake.move_snake(true);
             self.food = Food::new(self.game.get_bounds());
         } else {
@@ -106,7 +104,7 @@ impl Widget for &App {
     where
         Self: Sized,
     {
-        let snake_pos = Snake::getter_body(&self.snake);
+        let snake_pos = Snake::getter_body_to_canvas(&self.snake);
         let block = Block::bordered()
             .padding(Padding::ZERO)
             .border_style(Style::default().bg(Color::White));
@@ -124,7 +122,7 @@ impl Widget for &App {
                     color: Color::Red,
                 });
                 ctx.draw(&Points {
-                    coords: &[self.food.get_coords()],
+                    coords: &[self.food.get_coords_to_canvas()],
                     color: Color::Red,
                 });
             })

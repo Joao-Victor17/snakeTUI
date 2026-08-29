@@ -44,12 +44,16 @@ impl Food {
         let y = rng.random_range(game_limits.y_min..game_limits.y_max);
 
         Food {
-            coord: Coord::new(x, y),
+            coord: Coord::new(x as i64, y as i64),
         }
     }
 
-    pub fn get_coords(&self) -> (f64, f64) {
+    pub fn get_coords(&self) -> (i64, i64) {
         self.coord.get_coords()
+    }
+
+    pub fn get_coords_to_canvas(&self) -> (f64, f64) {
+        self.coord.get_coords_to_canvas()
     }
 }
 
